@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="A shared utility dashboard for dormmates.">
+  <title>UDH-304 | Dorm payments</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="auth-shell" id="auth-shell">
+    <div class="auth-brand">
+      <div class="brand-mark">UD</div>
+      <div><strong>UDH-304</strong><span>Shared living, simpler</span></div>
+    </div>
+    <section class="auth-card">
+      <p class="eyebrow">PRIVATE HOUSEHOLD</p>
+      <h1 id="auth-title">Hello!</h1>
+      <p class="auth-copy" id="auth-copy">Sign in with your household account.</p>
+      <form id="auth-form">
+        <label>Household username<input name="username" type="text" autocomplete="username" placeholder="tenant1" required></label>
+        <label>Password<input name="password" type="password" autocomplete="current-password" placeholder="At least 8 characters" minlength="8" required></label>
+        <button class="primary-button form-submit" type="submit"><span id="auth-submit-label">Sign in</span><span>→</span></button>
+      </form>
+      <p class="form-error" id="auth-error" role="alert"></p>
+    </section>
+  </div>
+
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Main navigation">
+      <div class="brand">
+          <div class="brand-mark" aria-hidden="true">UD</div>
+        <div>
+          <strong>UDH-304</strong>
+          <span>Shared living, simpler</span>
+        </div>
+      </div>
+
+      <nav class="nav-links">
+        <a class="nav-link active" href="#overview"><span class="nav-icon">⌂</span>Overview</a>
+        <a class="nav-link" href="#payments"><span class="nav-icon">₱</span>Payments</a>
+        <a class="nav-link" href="#housemates"><span class="nav-icon">♧</span>Housemates</a>
+        <a class="nav-link" href="#reports"><span class="nav-icon">▤</span>Reports</a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="status-dot"></div>
+        <div>
+          <strong id="cycle-status">Current cycle</strong>
+          <span id="cycle-members">No housemates added</span>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content" id="overview">
+      <header class="topbar">
+        <div class="mobile-brand"><div class="brand-mark">UD</div><strong>UDH-304</strong></div>
+        <div class="period-control">
+          <label for="period">Billing period</label>
+          <select id="period" aria-label="Billing period">
+            <option>September 2026</option>
+            <option>August 2026</option>
+            <option>July 2026</option>
+          </select>
+        </div>
+        <div class="profile">
+          <button class="icon-button" title="Notifications" aria-label="Notifications">♢<span class="notification-dot"></span></button>
+          <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle dark mode">◐</button>
+          <div class="avatar" id="profile-avatar">--</div>
+          <div class="profile-copy"><strong id="profile-name">Your account</strong><span>Housemate</span></div>
+          <button class="text-button" id="edit-profile" type="button">Edit name</button>
+          <span class="chevron">⌄</span>
+          <button class="logout-button" id="logout" type="button">Sign out</button>
+        </div>
+      </header>
+
+      <section class="welcome-row">
+        <div>
+          <p class="eyebrow" id="today-label">TODAY</p>
+          <h1><span id="greeting">Good day</span>, <span id="greeting-name">there</span> <span aria-hidden="true">✦</span></h1>
+          <p class="subheading">Here is how your household is tracking this cycle.</p>
+        </div>
+          <div class="welcome-actions"><button class="secondary-button" id="open-calendar-modal"><span>▦</span> Stay dates</button><button class="primary-button admin-only" id="open-bill-modal"><span>＋</span> Add bill</button></div>
+      </section>
+
+      <section class="stats-grid" aria-label="Billing summary">
+        <article class="stat-card featured">
+          <div class="stat-heading"><span>My total</span><span class="stat-icon">₱</span></div>
+          <strong class="stat-value" id="my-total">₱0.00</strong>
+          <div class="stat-meta"><span class="trend up" id="my-total-status">No balance yet</span><span>this cycle</span></div>
+        </article>
+        <article class="stat-card">
+          <div class="stat-heading"><span>Collected</span><span class="stat-icon green">✓</span></div>
+          <strong class="stat-value" id="collected-total">₱0.00</strong>
+          <div class="progress-track"><div class="progress-fill" id="collected-progress" style="width:0%"></div></div>
+          <div class="stat-meta"><span id="collected-label">Water · Electricity · WiFi</span><span id="collected-percent">0% collected</span></div>
+        </article>
+        <article class="stat-card">
+          <div class="stat-heading"><span>Average share</span><span class="stat-icon blue">◎</span></div>
+          <strong class="stat-value" id="rent-status">Not paid</strong>
+          <div class="stat-meta"><span>Rent status</span><span id="rent-amount">₱0.00</span></div>
+        </article>
+      </section>
+
+      <div class="dashboard-grid">
+        <section class="panel chart-panel" id="payments">
+          <div class="panel-header">
+            <div><h2>Quarter spending</h2><p id="chart-subtitle">Enter monthly values to compare total and personal share</p></div>
+            <select id="quarter-select" aria-label="Chart quarter"><option value="Q1">Q1 · Jan–Mar</option><option value="Q2">Q2 · Apr–Jun</option><option value="Q3">Q3 · Jul–Sep</option><option value="Q4">Q4 · Oct–Dec</option></select>
+            <button class="text-button" id="view-report">View report <span>→</span></button>
+          </div>
+          <div class="chart-area" aria-label="Bar chart showing spending by utility">
+            <div class="chart-y-axis"><span>₱5k</span><span>₱4k</span><span>₱3k</span><span>₱2k</span><span>₱1k</span><span>₱0</span></div>
+            <div class="chart-content">
+              <div class="grid-lines"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+              <div class="bars" id="quarter-bars"></div>
+            </div>
+          </div>
+          <form class="chart-entry" id="chart-form">
+            <label>Month<input name="month" type="text" placeholder="October" required></label>
+            <label>Total bill<input name="total" type="number" min="0" step="0.01" placeholder="0.00" required></label>
+            <label>My share<input name="share" type="number" min="0" step="0.01" placeholder="0.00" required></label>
+            <button class="small-button" type="submit">Add month</button>
+          </form>
+          <div class="legend"><span><i class="legend-dot electricity"></i>Total bill</span><span><i class="legend-dot water"></i>Your share</span></div>
+        </section>
+
+        <section class="panel activity-panel" id="reports">
+          <div class="panel-header"><div><h2>Recent activity</h2><p>Latest household updates</p></div><button class="more-button" aria-label="More activity options">•••</button></div>
+          <div class="activity-list" id="activity-list"><div class="empty-state">No activity recorded yet.</div></div>
+          <button class="full-button" id="view-activity">View all activity</button>
+        </section>
+      </div>
+
+      <section class="panel bills-panel" id="bills">
+        <div class="panel-header"><div><h2>Current bills</h2><p>One entry per bill type for the selected billing period</p></div></div>
+        <div class="bill-grid" id="bill-grid"><div class="empty-state">No bills added for this period.</div></div>
+      </section>
+
+      <section class="panel admin-panel admin-only" id="admin-console">
+        <div class="panel-header"><div><h2>Admin console</h2><p>Manage up to 3 admins and 8 renters for UDH-304.</p></div><span class="admin-badge">ADMIN</span></div>
+        <div class="admin-grid">
+          <div><h3>Connected members</h3><div id="member-list" class="member-list"><div class="empty-state">No members connected yet.</div></div></div>
+        </div>
+      </section>
+
+      <section class="panel people-panel" id="housemates">
+        <div class="panel-header"><div><h2>My balance</h2><p id="balance-period">Your private payment view</p></div></div>
+        <div class="table-wrap">
+          <div class="personal-breakdown" id="personal-breakdown"><div class="empty-state">Add bills to see your personal breakdown.</div></div>
+        </div>
+        <div class="table-footer"><span id="stay-summary">No stay dates selected</span><button class="text-button" id="open-calendar-link">Edit stay dates <span>→</span></button></div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="bill-modal" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <button class="modal-close" id="close-bill-modal" aria-label="Close">×</button>
+      <p class="eyebrow">NEW ENTRY</p><h2 id="modal-title">Add a household bill</h2><p class="modal-copy">Each period can have one electricity, WiFi, water, and rent bill.</p>
+      <form id="bill-form">
+        <label>Bill type<select name="type" required><option value="electricity">Electricity</option><option value="wifi">WiFi</option><option value="water">Water</option><option value="rent">Rent</option></select></label>
+        <label>Bill name<input name="name" type="text" placeholder="e.g. September electricity" required></label>
+        <div class="form-row"><label>Amount<input name="amount" type="number" min="0" step="0.01" placeholder="0.00" required></label><label>Bill started<input name="started" type="date" required></label></div>
+        <div class="form-row"><label>Due date<input name="due" type="date" required></label><label>Notes<input name="notes" type="text" placeholder="Optional details"></label></div>
+        <label>Split method<select name="split"><option value="usage_and_days">Based on usage and days stayed</option><option value="equal">Equally among housemates</option><option value="days">Based on days stayed</option></select></label>
+        <button class="primary-button form-submit" type="submit">Save bill <span>→</span></button>
+      </form>
+    </section>
+  </div>
+  <div class="modal-backdrop" id="calendar-modal" hidden>
+    <section class="modal calendar-modal" role="dialog" aria-modal="true" aria-labelledby="calendar-title">
+      <button class="modal-close" id="close-calendar-modal" aria-label="Close">×</button>
+      <p class="eyebrow">STAY DATES</p><h2 id="calendar-title">When are you here?</h2><p class="modal-copy">Tap the days you will stay in the dorm for this billing period.</p>
+      <div class="calendar-toolbar"><button type="button" id="previous-month">←</button><strong id="calendar-month">Month</strong><button type="button" id="next-month">→</button></div>
+      <div class="calendar-weekdays"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
+      <div class="calendar-grid" id="calendar-grid"></div>
+      <button class="primary-button form-submit" id="save-stay-dates" type="button">Save stay dates <span>→</span></button>
+    </section>
+  </div>
+  <div class="modal-backdrop" id="profile-modal" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="profile-modal-title">
+      <button class="modal-close" id="close-profile-modal" aria-label="Close">×</button>
+      <p class="eyebrow">PROFILE</p><h2 id="profile-modal-title">Update your name</h2><p class="modal-copy">Your household username stays the same.</p>
+      <form id="profile-form">
+        <label>Full name<input name="fullName" type="text" autocomplete="name" minlength="2" maxlength="120" required></label>
+        <button class="primary-button form-submit" type="submit">Save name <span>→</span></button>
+      </form>
+    </section>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>

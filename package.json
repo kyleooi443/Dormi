@@ -1,0 +1,16 @@
+{
+  "name": "udh-304-dorm-payments",
+  "version": "1.0.0",
+  "private": true,
+  "description": "UDH-304 shared dorm payment dashboard",
+  "scripts": {
+    "check": "node --check app.js",
+    "dev": "vercel dev"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.57.0"
+  },
+  "devDependencies": {
+    "vercel": "^48.0.0"
+  }
+}
