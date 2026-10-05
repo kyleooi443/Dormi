@@ -210,6 +210,16 @@ function showAuthError(message) {
   document.querySelector("#auth-error").textContent = message;
 }
 
+// Read API responses safely so an HTML error page does not appear as a JSON parsing error.
+async function readApiResponse(response) {
+  const body = await response.text();
+  try {
+    return body ? JSON.parse(body) : {};
+  } catch {
+    throw new Error("The login API is unavailable. Run this app with Vercel Dev instead of a static file server.");
+  }
+}
+
 // Sign in through the backend and keep only the returned session tokens in the browser.
 async function handleAuth(event) {
   event.preventDefault();
@@ -222,12 +232,12 @@ async function handleAuth(event) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password }),
     });
-    const result = await response.json();
+    const result = await readApiResponse(response);
     if (!response.ok) throw new Error(result.error || "Unable to sign in.");
 
     // Load the profile with the new bearer token so the dashboard knows the user's role and name.
     const profileResponse = await fetch("/api/me", { headers: { Authorization: `Bearer ${result.accessToken}` } });
-    const profileResult = await profileResponse.json();
+    const profileResult = await readApiResponse(profileResponse);
     if (!profileResponse.ok) throw new Error(profileResult.error || "Unable to load your profile.");
     write("udh304.auth", { accessToken: result.accessToken, refreshToken: result.refreshToken, username: result.username });
     write("udh304.profile", profileResult.profile);
