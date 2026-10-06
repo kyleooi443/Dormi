@@ -145,3 +145,20 @@ insert into storage.buckets (id, name, public) values ('payment-receipts', 'paym
 create policy "members upload payment receipts" on storage.objects for insert to authenticated with check (bucket_id = 'payment-receipts' and (storage.foldername(name))[1] = auth.uid()::text);
 create policy "admins view payment receipts" on storage.objects for select to authenticated using (bucket_id = 'payment-receipts' and (select role from public.current_profile()) = 'admin');
 create policy "renters view own receipts" on storage.objects for select to authenticated using (bucket_id = 'payment-receipts' and (storage.foldername(name))[1] = auth.uid()::text);
+
+-- Day-stay based splitting: total stay-days across active renters for a
+-- period (admins excluded), readable by any household member.
+create or replace function public.stay_day_total(p_billing_period_id uuid)
+returns integer
+language sql stable security definer set search_path = public as $$
+  select count(*)::integer
+  from public.stay_dates sd
+  join public.profiles p on p.id = sd.renter_id
+  where sd.billing_period_id = p_billing_period_id
+    and p.role = 'renter'
+    and p.active
+    and p.household_id = (select household_id from public.current_profile());
+$$;
+
+revoke all on function public.stay_day_total(uuid) from public;
+grant execute on function public.stay_day_total(uuid) to authenticated;
