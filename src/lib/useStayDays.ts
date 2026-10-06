@@ -8,6 +8,7 @@ import { fetchStayDates, fetchStayDayTotal } from "./api";
  * Pass enabled=false to skip fetching entirely (e.g. for admins).
  */
 export function useStayDays(periodId: string | null | undefined, enabled = true) {
+  /** Skip fetching entirely when enabled=false (e.g. for admins). */
   const [myStayDays, setMyStayDays] = useState(0);
   const [totalStayDays, setTotalStayDays] = useState(0);
 

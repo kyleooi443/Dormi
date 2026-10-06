@@ -1,6 +1,7 @@
 import { formatDate, formatMoney } from "./format";
 import { SHARED_TYPES, type BillingPeriod, type Bill, type Payment, type Profile } from "./types";
 
+/** One formatted line in the period report: a renter’s expected share vs. actual payment. */
 export interface ReportLine {
   bill: Bill;
   renter: Profile;

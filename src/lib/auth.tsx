@@ -4,11 +4,18 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from "
 import { supabase } from "./supabase";
 import type { Profile } from "./types";
 
+/**
+ * Auth context value exposed to the entire app.
+ * - loading: true while the initial session is being restored from storage.
+ * - session: the raw Supabase session (null when signed out).
+ * - profile: the household profile row for the signed-in user (null if
+ *            missing, inactive, or not yet loaded).
+ */
 interface AuthValue {
   loading: boolean;
   session: Session | null;
   profile: Profile | null;
-  /** Returns null on success or an error message to show the user. */
+  /** Returns null on success or a user-visible error message. */
   signIn: (username: string, password: string) => Promise<string | null>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -29,7 +36,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // A session without an active household profile is useless — drop it so the
-    // app returns to the login screen instead of hanging.
+    // app returns to the login screen instead of hanging. This runs on initial
+    // load (getSession) and on every auth state change (listener).
     async function applySession(nextSession: Session | null) {
       setSession(nextSession);
       if (nextSession) {
@@ -64,6 +72,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       async signIn(username, password) {
         const email = `${username.trim().toLowerCase()}@udh304.local`;
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        // Auth failures that look like network issues get a friendlier message
+        // so users don't think their password is wrong.
         if (error) {
           // Network failures must not masquerade as wrong credentials.
           if (error.name === "AuthRetryableFetchError" || /fetch|network|failed/i.test(error.message)) {
@@ -105,3 +115,10 @@ export function useAuth(): AuthValue {
   if (!value) throw new Error("useAuth must be used inside AuthProvider");
   return value;
 }
+
+/**
+ * AuthProvider wraps the app and keeps the session + profile in sync with
+ * Supabase Auth. Any screen can call useAuth() to read state or trigger
+ * sign-in / sign-out / profile refresh.
+ */
+

@@ -1,6 +1,10 @@
 import { personalShare } from "./format";
 import { SHARED_TYPES, type Bill } from "./types";
 
+/**
+ * Share computation context.
+ * Used by shareFor() to derive what a renter owes under house rules.
+ */
 export interface ShareContext {
   /** Active renter count (equal-split fallback and rent). */
   renterCount: number;

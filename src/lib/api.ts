@@ -3,10 +3,14 @@ import { Platform } from "react-native";
 import { supabase } from "./supabase";
 import type { BillingPeriod, Bill, BillType, Payment, PaymentStatus, Profile, StayDate } from "./types";
 
+/**
+ * API helpers — thin typed wrappers over supabase-js.
+ * Every query is scoped by RLS; helpers just unwrap errors and cast types.
+ */
 const RECEIPT_BUCKET = "payment-receipts";
 
-/** RLS scopes this to the caller's own household. */
 export async function fetchMembers(): Promise<Profile[]> {
+  /** RLS scopes this to the caller's own household. */
   const { data, error } = await supabase.from("profiles").select("*").order("created_at");
   if (error) throw new Error(error.message);
   return (data ?? []) as Profile[];

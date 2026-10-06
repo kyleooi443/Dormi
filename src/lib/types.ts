@@ -2,6 +2,7 @@ export type Role = "admin" | "renter";
 export type BillType = "electricity" | "wifi" | "water" | "rent";
 export type PaymentStatus = "submitted" | "approved" | "rejected";
 
+/** A household member (3 admins max, 8 renters max, enforced by DB trigger). */
 export interface Profile {
   id: string;
   household_id: string;
@@ -13,6 +14,7 @@ export interface Profile {
   created_at: string;
 }
 
+/** Monthly billing window. Each period holds at most one bill per type. */
 export interface BillingPeriod {
   id: string;
   household_id: string;
@@ -24,6 +26,7 @@ export interface BillingPeriod {
   created_at: string;
 }
 
+/** A single utility/rent bill within a period. Unique (period, type). */
 export interface Bill {
   id: string;
   household_id: string;
@@ -39,6 +42,7 @@ export interface Bill {
   created_at: string;
 }
 
+/** A renter’s presence on a specific calendar date within a period. */
 export interface StayDate {
   id: string;
   renter_id: string;
@@ -47,6 +51,7 @@ export interface StayDate {
   created_at: string;
 }
 
+/** A renter’s payment attempt against a bill. Unique (bill, renter). */
 export interface Payment {
   id: string;
   bill_id: string;
@@ -62,6 +67,7 @@ export interface Payment {
 }
 
 export const BILL_TYPES: BillType[] = ["electricity", "wifi", "water", "rent"];
+/** Utility bill types prorated by stay days. Rent always splits equally. */
 export const SHARED_TYPES: BillType[] = ["electricity", "wifi", "water"];
 
 export const BILL_TYPE_LABELS: Record<BillType, string> = {

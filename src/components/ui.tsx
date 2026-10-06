@@ -19,6 +19,14 @@ import { fonts, useTheme } from "@/lib/theme";
 
 export type IconName = keyof typeof Ionicons.glyphMap;
 
+/**
+ * UI Primitives
+ * =============
+ * Every screen must compose with these components. Never build one-off
+ * buttons, cards, or form fields — extend these instead so the design system
+ * stays consistent.
+ */
+
 /* ----------------------------------- icons ---------------------------------- */
 
 /** One icon family (Ionicons) everywhere — sized from tokens, never emojis. */

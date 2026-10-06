@@ -36,6 +36,10 @@ function RootStack() {
   );
 }
 
+/**
+ * Root layout — loads fonts, hides splash, then nests providers.
+ * Provider order matters: Theme → Toast → Auth → Household → Router.
+ */
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     DMSans_400Regular,

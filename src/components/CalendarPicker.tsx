@@ -10,6 +10,8 @@ const MONTHS = [
   "July", "August", "September", "October", "November", "December",
 ];
 
+// Tap-to-toggle month calendar used for stay dates. Keys are "YYYY-MM-DD".
+
 /**
  * Tap-to-toggle month calendar used for stay dates. Keys are "YYYY-MM-DD".
  */

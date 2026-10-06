@@ -10,7 +10,7 @@ export interface BarDatum {
   share: number;
 }
 
-/** Paired bar chart (bill total vs. your share), styled like the original dashboard. */
+/** Paired bars: total bill (blue) vs. your share (forest). Styled like the original web dashboard. */
 export function BarChart({ data }: { data: BarDatum[] }) {
   const { colors } = useTheme();
   const max = Math.max(...data.map((item) => item.total), 1);

@@ -28,6 +28,7 @@ export default function TabsLayout() {
   const { loading, session, profile } = useAuth();
   const insets = useSafeAreaInsets();
 
+  // Show a loading spinner while the session/profile is still resolving.
   if (loading || (session && !profile)) {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.paper }}>

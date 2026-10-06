@@ -3,6 +3,7 @@ import { Animated, StyleSheet, Text } from "react-native";
 
 import { useTheme } from "./theme";
 
+/** Transient message shown at the bottom of the screen. */
 interface ToastValue {
   show: (message: string) => void;
 }

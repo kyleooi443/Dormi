@@ -22,6 +22,7 @@ const QUARTERS = [
 ];
 
 export default function OverviewScreen() {
+  // Overview = landing screen for both admins and renters.
   const { colors, isDark, setMode } = useTheme();
   const { profile, signOut } = useAuth();
   const { period, periods, bills, members, renterCount, refresh, loading } = useHousehold();

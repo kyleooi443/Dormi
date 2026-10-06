@@ -8,7 +8,10 @@ const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error(
-    "Missing EXPO_PUBLIC_SUPABASE_URL or EXPO_PUBLIC_SUPABASE_ANON_KEY. Copy .env.example to .env and fill in your Supabase project values."
+    "Missing EXPO_PUBLIC_SUPABASE_URL or EXPO_PUBLIC_SUPABASE_ANON_KEY. " +
+      "Copy .env.example to .env and fill in your Supabase project values. " +
+      "Note: EXPO_PUBLIC_SUPABASE_URL must be the bare origin (e.g. https://xxxx.supabase.co), " +
+      "NOT /rest/v1/ — otherwise auth will 404."
   );
 }
 

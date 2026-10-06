@@ -4,6 +4,13 @@ import { fetchAllBills, fetchMembers, fetchPeriods } from "./api";
 import { useAuth } from "./auth";
 import type { BillingPeriod, Bill, Profile } from "./types";
 
+/**
+ * HouseholdData Context
+ * =====================
+ * Centralizes the shared data every screen needs: billing periods, household
+ * members, and bills. RLS scopes everything to the signed-in user's household,
+ * so no client-side filtering is required.
+ */
 interface HouseholdValue {
   loading: boolean;
   periods: BillingPeriod[];
@@ -31,10 +38,13 @@ export function HouseholdProvider({ children }: { children: React.ReactNode }) {
     if (!householdId) return;
     setLoading(true);
     try {
+      // Fetch the three data sets in parallel — they are independent.
       const [nextPeriods, nextMembers, nextBills] = await Promise.all([fetchPeriods(), fetchMembers(), fetchAllBills()]);
       setPeriods(nextPeriods);
       setMembers(nextMembers);
       setBills(nextBills);
+      // Auto-select the current period (or the most recent one) if the user
+      // hasn't manually picked a different period yet.
       setSelectedId((current) => {
         if (current && nextPeriods.some((item) => item.id === current)) return current;
         const today = new Date().toISOString().slice(0, 10);
