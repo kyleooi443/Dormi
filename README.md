@@ -1,9 +1,43 @@
 # UDH-304 Dorm Payments
 
-A shared dorm payment app for one household — up to 3 admins and 8 renters. Built
-with **Expo (React Native + TypeScript)** for iOS, Android, and web, talking
-**directly to Supabase** (Auth + PostgreSQL + Storage). There is no server layer:
-the database's row level security policies enforce every permission.
+## In one paragraph
+
+UDH-304 is a private dorm-payment app for one household of up to 3 admins and 8
+renters, built with Expo (React Native + TypeScript) for iOS, Android, and web.
+Admins open monthly billing periods, add one electricity/WiFi/water/rent bill per
+period, and review renter payments with photo receipts; renters pick their stay
+dates, see exactly what they owe, and pay per bill. Electricity, WiFi, and water
+are prorated by each renter's stay days while rent always splits equally. The app
+talks **directly to Supabase** (Auth + PostgreSQL + private Storage) with no
+server layer — every permission is enforced by row-level security in the
+database itself, wrapped in a mobile-first, dark-mode, floating-glass UI.
+
+## In more detail
+
+**Function.** Access is limited to eight fixed accounts (`admin`, `tenant1`–`tenant7`)
+that sign in with a household username and password — no sign-ups, no Google.
+Inside, an admin starts a billing period (e.g. "October 2026") and records the
+month's bills, one per type. Renters open the bill, see a transparent breakdown
+of their share (bill total × their stay-days ÷ household stay-days, or an equal
+split for rent and when no days are recorded), submit a payment with an optional
+receipt photo, and track due-date countdown chips. Admins approve or reject each
+payment, toggle member access, watch per-bill collection progress, and export a
+period report — a chat-ready summary or a full CSV of every renter × every bill.
+
+**Architecture.** The front end is a single Expo Router codebase: file-based
+routes (`(tabs)` for Overview/Bills/Activity/Admin, plus modal flows), React
+context providers for auth, household data, theme, and toasts, and a typed API
+layer over `supabase-js`. The back end is pure Supabase: Postgres tables for
+households, profiles, billing periods, bills, stay dates, payments, and an audit
+log; a trigger that caps the household at 3 admins and 8 renters; row-level
+security policies that give renters access to only their own rows and admins
+household-wide control; a security-definer `stay_day_total()` function that
+shares aggregate stay-day counts without exposing anyone's dates; and a private
+Storage bucket where receipts are reachable only by their owner and admins via
+short-lived signed URLs. The web build is a static single-page app
+(`expo export` → `dist/`) hosted on Vercel with only the public anon key inlined —
+the service-role key exists solely in the local bootstrap script that created
+the eight accounts.
 
 ## Features
 
