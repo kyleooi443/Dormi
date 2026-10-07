@@ -1,8 +1,8 @@
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Text, View, useWindowDimensions } from "react-native";
 
-import { Button, Card, EmptyState, Pill, ProgressBar, Screen, SectionHeader } from "@/components/ui";
+import { BillIcon, Button, Card, Chips, EmptyState, Icon, PageHeader, Pill, ProgressBar, Screen, SectionHeader } from "@/components/ui";
 import { fetchPayments } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { dueCountdown, formatDate, formatMoney } from "@/lib/format";
@@ -14,6 +14,8 @@ import { BILL_TYPE_LABELS, SHARED_TYPES, type Payment } from "@/lib/types";
 
 export default function BillsScreen() {
   const { colors } = useTheme();
+  const { width } = useWindowDimensions();
+  const [filter, setFilter] = useState("all");
   const { profile } = useAuth();
   const { period, bills, renterCount, refresh, loading } = useHousehold();
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -47,91 +49,43 @@ export default function BillsScreen() {
   }, [load]);
 
   const myTotal = periodBills.reduce((sum, bill) => sum + shareFor(bill, shareCtx), 0);
-  const paidCount = periodBills.filter((bill) => payments.some((payment) => payment.bill_id === bill.id && payment.renter_id === profile?.id && payment.status !== "rejected")).length;
+  const approvedCount = periodBills.filter(bill => payments.some(payment => payment.bill_id === bill.id && payment.renter_id === profile?.id && payment.status === "approved")).length;
+  const householdTotal = periodBills.reduce((sum, bill) => sum + Number(bill.amount), 0);
+  const total = isAdmin ? householdTotal : myTotal;
+  const shownBills = periodBills.filter(bill => filter === "all" || (filter === "utilities" ? SHARED_TYPES.includes(bill.type) : bill.type === "rent"));
 
   return (
     <Screen clearTabBar refreshing={loading} onRefresh={() => void refresh().then(() => refreshStayDays())}>
-      <SectionHeader icon="cash-outline" title="Current bills" subtitle={period ? `${period.label} · one entry per bill type` : "No period selected"} />
-
-      {!period ? (
-        <EmptyState icon="calendar-outline" title="No billing period yet" hint={isAdmin ? "Create one from the period selector on Overview." : "Ask your admin to open a billing period."} />
-      ) : (
-        <>
-          <Card featured>
-            <Text style={[styles.totalLabel, { color: "#9fb9ae" }]}>My total · {period.label}</Text>
-            <Text style={[styles.totalValue, { color: colors.onForest }]}>{formatMoney(myTotal)}</Text>
-            <Text style={{ color: "#9fb9ae", fontSize: 12 }}>
-              {paidCount} of {periodBills.length} bills paid
-              {!isAdmin && totalStayDays > 0 ? ` · utilities prorated over ${totalStayDays} household stay-days` : ` · split across ${renterCount} renters`}
-            </Text>
-          </Card>
-
-          {periodBills.length === 0 ? (
-            <EmptyState icon="document-outline" title="No bills added for this period" hint={isAdmin ? "Tap Add bill on Overview to create the first one." : "An admin can add the first one."} />
-          ) : (
-            periodBills.map((bill) => {
-              const myPayment = payments.find((payment) => payment.bill_id === bill.id && payment.renter_id === profile?.id && payment.status !== "rejected");
-              const billPayments = payments.filter((payment) => payment.bill_id === bill.id && payment.status !== "rejected");
-              const collected = billPayments.reduce((sum, payment) => sum + Number(payment.amount), 0);
-              const myShare = shareFor(bill, shareCtx);
-              return (
-                <Card key={bill.id} style={{ gap: 12 }}>
-                  <View style={styles.billTop}>
-                    <View style={{ flex: 1, gap: 6 }}>
-                      <Pill label={BILL_TYPE_LABELS[bill.type]} tone={bill.type === "rent" ? "coral" : bill.type === "wifi" ? "blue" : bill.type === "water" ? "blue" : "yellow"} />
-                      <Text style={[styles.billTitle, { color: colors.ink }]}>{bill.title}</Text>
-                      <View style={styles.metaRow}>
-                        <Text style={{ color: colors.muted, fontSize: 12 }}>
-                          Started {formatDate(bill.started_on)} · Due {formatDate(bill.due_on)}
-                        </Text>
-                        {(isAdmin || !myPayment) ? <Pill label={dueCountdown(bill.due_on).label} tone={dueCountdown(bill.due_on).tone} /> : null}
-                      </View>
-                      {bill.notes ? <Text style={{ color: colors.muted, fontSize: 12, fontStyle: "italic" }}>{bill.notes}</Text> : null}
-                    </View>
-                    <Text style={[styles.billAmount, { color: colors.ink }]}>{formatMoney(bill.amount)}</Text>
-                  </View>
-
-                  <View style={[styles.billFooter, { borderTopColor: colors.line }]}>
-                    {isAdmin ? (
-                      <View style={{ flex: 1, gap: 6 }}>
-                        <Text style={{ color: colors.muted, fontSize: 12 }}>
-                          Collected {formatMoney(collected)} of {formatMoney(bill.amount)} · {new Set(billPayments.map((payment) => payment.renter_id)).size}/{renterCount} renters
-                        </Text>
-                        <ProgressBar value={bill.amount > 0 ? collected / Number(bill.amount) : 0} />
-                      </View>
-                    ) : (
-                      <>
-                        <View style={{ flex: 1 }}>
-                          <Text style={{ color: colors.muted, fontSize: 11 }}>My share</Text>
-                          <Text style={{ color: colors.ink, fontSize: 16, fontFamily: fonts.bold }}>{formatMoney(myShare)}</Text>
-                          {SHARED_TYPES.includes(bill.type) ? (
-                            <Text style={{ color: colors.muted, fontSize: 10, marginTop: 1 }}>{shareBasis(bill, shareCtx)}</Text>
-                          ) : null}
-                        </View>
-                        {myPayment ? (
-                          <Pill label={myPayment.status === "approved" ? "Paid ✓" : "Submitted"} tone="mint" />
-                        ) : (
-                          <Button small icon="cash-outline" title={`Pay ${formatMoney(myShare)}`} onPress={() => router.push({ pathname: "/modal/pay-bill", params: { billId: bill.id } })} />
-                        )}
-                      </>
-                    )}
-                  </View>
-                </Card>
-              );
-            })
-          )}
-        </>
-      )}
+      <PageHeader title="The essentials, sorted." subtitle="A clear picture of what keeps your home running."
+        action={<View style={{ flexDirection: "row", gap: 10, flexWrap: "wrap" }}><Button small variant="secondary" icon="calendar-outline" title={period?.label ?? "Choose a period"} onPress={() => router.push("/modal/periods")} />{isAdmin && <Button small icon="add" title="Add bill" onPress={() => router.push("/modal/add-bill")} />}</View>} />
+      {!period ? <Card><EmptyState icon="calendar-outline" title="No billing period yet" hint={isAdmin ? "Choose a period to get started." : "Your admin will open a billing period soon."} /></Card> : <>
+        <Card featured style={{ flexDirection: width >= 600 ? "row" : "column", justifyContent: "space-between", alignItems: width >= 600 ? "center" : "flex-start", gap: 24, padding: 28 }}>
+          <View><Text style={{ color: colors.onForestMuted, fontFamily: fonts.medium, fontSize: 13 }}>{isAdmin ? "Household total" : "Your share"} for {period.label}</Text><Text style={{ color: colors.onForest, fontFamily: fonts.display, fontSize: 40, letterSpacing: -1.5, marginTop: 8 }}>{formatMoney(total)}</Text></View>
+          <View style={{ maxWidth: 290, gap: 10 }}><View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}><Icon name={isAdmin ? "people-outline" : "checkmark-circle-outline"} size={18} color={colors.onForestMuted} /><Text style={{ color: colors.onForest, fontFamily: fonts.medium, fontSize: 13 }}>{isAdmin ? `${renterCount} renters sharing the essentials` : `${approvedCount} of ${periodBills.length} bills settled`}</Text></View><Text style={{ color: colors.onForestMuted, fontFamily: fonts.body, fontSize: 12, lineHeight: 20 }}>Utilities follow your stay days. Rent is split equally among renters.</Text></View>
+        </Card>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}><Chips options={[{ value: "all", label: "All bills" }, { value: "utilities", label: "Utilities" }, { value: "rent", label: "Rent" }]} value={filter} onChange={setFilter} /><Text style={{ color: colors.muted, fontFamily: fonts.body, fontSize: 12 }}>{shownBills.length} bill{shownBills.length === 1 ? "" : "s"}</Text></View>
+        {shownBills.length === 0 ? <Card><EmptyState icon="receipt-outline" title="Nothing here just yet" hint={isAdmin ? "Add a bill and it will appear here." : "Your admin will add your household bills here."} /></Card> : <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 20 }}>
+          {shownBills.map(bill => {
+            const myPayment = payments.find(payment => payment.bill_id === bill.id && payment.renter_id === profile?.id && payment.status !== "rejected");
+            const approvedPayments = payments.filter(payment => payment.bill_id === bill.id && payment.status === "approved");
+            const received = approvedPayments.reduce((sum, payment) => sum + Number(payment.amount), 0);
+            const myShare = shareFor(bill, shareCtx);
+            const countdown = dueCountdown(bill.due_on);
+            return <Card key={bill.id} style={{ width: width >= 768 ? "48.5%" : "100%", flexGrow: 1, gap: 20 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}><BillIcon type={bill.type} size={48} /><Pill label={myPayment ? myPayment.status === "approved" ? "Paid" : "In review" : countdown.label} tone={myPayment ? myPayment.status === "approved" ? "mint" : "yellow" : countdown.tone} /></View>
+              <View><Text style={{ color: colors.muted, fontFamily: fonts.body, fontSize: 12 }}>{BILL_TYPE_LABELS[bill.type]}</Text><Text style={{ color: colors.ink, fontFamily: fonts.displayMedium, fontSize: 21, letterSpacing: -0.6, marginTop: 5 }}>{bill.title}</Text></View>
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", gap: 12 }}><View><Text style={{ color: colors.muted, fontFamily: fonts.body, fontSize: 12 }}>{isAdmin ? "Bill total" : "Your share"}</Text><Text style={{ color: colors.ink, fontFamily: fonts.display, fontSize: 28, letterSpacing: -1, marginTop: 5 }}>{formatMoney(isAdmin ? bill.amount : myShare)}</Text></View><View style={{ alignItems: "flex-end", gap: 5 }}><Text style={{ color: colors.muted, fontFamily: fonts.body, fontSize: 12 }}>Due {formatDate(bill.due_on)}</Text>{!isAdmin && <Text style={{ color: colors.muted, fontFamily: fonts.body, fontSize: 12 }}>{formatMoney(bill.amount)} total</Text>}</View></View>
+              {bill.notes && <Text style={{ color: colors.muted, fontFamily: fonts.body, fontSize: 13, lineHeight: 20 }}>{bill.notes}</Text>}
+              <View style={{ borderTopWidth: 1, borderTopColor: colors.line, paddingTop: 18, gap: 12 }}>
+                {isAdmin ? <><View style={{ flexDirection: "row", justifyContent: "space-between", gap: 10 }}><Text style={{ color: colors.muted, fontFamily: fonts.body, fontSize: 12 }}>{new Set(approvedPayments.map(payment => payment.renter_id)).size} of {renterCount} renters settled</Text><Text style={{ color: colors.accent, fontFamily: fonts.medium, fontSize: 12 }}>{formatMoney(received)} collected</Text></View><ProgressBar value={bill.amount > 0 ? received / Number(bill.amount) : 0} /></> : <>
+                  <Text style={{ color: colors.muted, fontFamily: fonts.body, fontSize: 12, lineHeight: 19 }}>{shareBasis(bill, shareCtx)}</Text>
+                  {myPayment ? <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 8 }}><Icon name={myPayment.status === "approved" ? "checkmark-circle-outline" : "time-outline"} size={18} color={myPayment.status === "approved" ? colors.accent : colors.warningInk} /><Text style={{ color: colors.muted, fontFamily: fonts.body, fontSize: 13 }}>{myPayment.status === "approved" ? "All settled. One less thing to think about." : "Your admin will review your payment soon."}</Text></View> : <Button title={`Pay ${formatMoney(myShare)}`} arrow onPress={() => router.push({ pathname: "/modal/pay-bill", params: { billId: bill.id } })} />}
+                </>}
+              </View>
+            </Card>;
+          })}
+        </View>}
+      </>}
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  metaRow: { flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" },
-  totalLabel: { fontSize: 12, fontFamily: fonts.medium },
-  totalValue: { fontSize: 30, fontFamily: fonts.display, letterSpacing: -0.8, marginTop: 4, marginBottom: 6 },
-  billTop: { flexDirection: "row", gap: 12, alignItems: "flex-start" },
-  billTitle: { fontSize: 16, fontFamily: fonts.displayMedium, letterSpacing: -0.2 },
-  billAmount: { fontSize: 18, fontFamily: fonts.display },
-  billFooter: { flexDirection: "row", alignItems: "center", gap: 12, borderTopWidth: 1, paddingTop: 12 },
-});

@@ -1,8 +1,8 @@
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Text, View, useWindowDimensions } from "react-native";
 
-import { Avatar, Button, Card, EmptyState, Pill, Screen, SectionHeader } from "@/components/ui";
+import { Button, Card, Chips, EmptyState, Icon, PageHeader, Pill, Screen, SectionHeader } from "@/components/ui";
 import { fetchPayments, fetchStayDates } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { formatDate, formatMoney } from "@/lib/format";
@@ -21,6 +21,8 @@ interface ActivityItem {
 
 export default function ActivityScreen() {
   const { colors } = useTheme();
+  const { width } = useWindowDimensions();
+  const [filter, setFilter] = useState("all");
   const { profile } = useAuth();
   const { period, bills, members, refresh, loading } = useHousehold();
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -76,52 +78,30 @@ export default function ActivityScreen() {
     return [...billEvents, ...paymentEvents].sort((a, b) => (a.at < b.at ? 1 : -1));
   }, [periodBills, payments, members, isAdmin]);
 
+  const visible = items.filter(item => filter === "all" || (filter === "bills" ? item.key.startsWith("bill-") : item.key.startsWith("payment-")));
+  const wide = width >= 900;
   return (
     <Screen clearTabBar refreshing={loading} onRefresh={() => void refresh()}>
-      <SectionHeader icon="time-outline" title="Activity" subtitle={period ? period.label : "No period selected"} />
-
-      {!isAdmin ? (
-        <Card>
-          <SectionHeader icon="calendar-outline" title="My stay dates" subtitle={period ? `${myStayCount} day${myStayCount === 1 ? "" : "s"} selected for ${period.label}` : undefined} />
-          <Text style={{ color: colors.muted, fontSize: 13, lineHeight: 20, marginTop: 6 }}>
-            Your stay days decide your share of electricity, WiFi, and water — the more days you're here, the more of those bills you cover. Rent always splits equally.
-          </Text>
-          <View style={{ marginTop: 12 }}>
-            <Button variant="secondary" icon="calendar-outline" title="Edit stay dates" arrow onPress={() => router.push("/modal/stay-dates")} />
-          </View>
+      <PageHeader title="Life around the house." subtitle="Every bill, every payment. A little more clarity."
+        action={<Button small variant="secondary" icon="calendar-outline" title={period?.label ?? "Choose a period"} onPress={() => router.push("/modal/periods")} />} />
+      <View style={{ flexDirection: wide ? "row" : "column", gap: 24, alignItems: "flex-start" }}>
+        <Card style={{ flex: wide ? 1.8 : undefined, width: wide ? undefined : "100%", minWidth: 0 }}>
+          <SectionHeader title="Your household timeline" subtitle={period?.label ?? "Waiting for your first period"} />
+          <View style={{ marginTop: 20 }}><Chips options={[{ value: "all", label: "Everything" }, { value: "bills", label: "Bills" }, { value: "payments", label: "Payments" }]} value={filter} onChange={setFilter} /></View>
+          {visible.length === 0 ? <EmptyState icon="pulse-outline" title="All quiet for now" hint="New bills and payment updates will appear here." /> : <View style={{ marginTop: 8 }}>{visible.map((item, index) => {
+            const date = new Date(item.at).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+            return <View key={item.key} style={{ flexDirection: "row", alignItems: "flex-start", gap: 12, paddingVertical: 22, borderBottomWidth: index < visible.length - 1 ? 1 : 0, borderBottomColor: colors.line }}>
+              <View style={{ width: 40, height: 40, borderRadius: 14, alignItems: "center", justifyContent: "center", backgroundColor: item.status === "approved" ? colors.mint : colors.panelSoft }}><Icon name={item.key.startsWith("bill-") ? "receipt-outline" : item.status === "approved" ? "checkmark-circle-outline" : "wallet-outline"} size={20} color={colors.accent} /></View>
+              <View style={{ flex: 1, minWidth: 0, gap: 5 }}><Text style={{ color: colors.ink, fontFamily: fonts.medium, fontSize: 14, lineHeight: 21 }}>{item.title}</Text><Text style={{ color: colors.muted, fontFamily: fonts.body, fontSize: 12, lineHeight: 19 }}>{item.detail}</Text><Text style={{ color: colors.muted, fontFamily: fonts.body, fontSize: 11 }}>{date}</Text></View>
+              <View style={{ alignItems: "flex-end", gap: 8, maxWidth: "36%" }}>{item.amount != null && <Text style={{ color: colors.ink, fontFamily: fonts.bold, fontSize: 14 }}>{formatMoney(item.amount)}</Text>}{item.status && <Pill label={item.status === "submitted" ? "In review" : item.status === "approved" ? "Approved" : "Rejected"} tone={item.status === "approved" ? "mint" : item.status === "rejected" ? "coral" : "yellow"} />}</View>
+            </View>;
+          })}</View>}
         </Card>
-      ) : null}
-
-      <Card>
-        <SectionHeader icon="list-outline" title="All activity" subtitle="Bills and payments, newest first" />
-        {items.length === 0 ? (
-          <View style={{ marginTop: 12 }}>
-            <EmptyState icon="time-outline" title="No activity recorded yet" />
-          </View>
-        ) : (
-          <View style={{ gap: 14, marginTop: 14 }}>
-            {items.map((item, index) => (
-              <View key={item.key} style={styles.row}>
-                <Avatar name={item.title} index={index} size={38} />
-                <View style={{ flex: 1, gap: 2 }}>
-                  <Text style={{ color: colors.ink, fontSize: 14, fontFamily: fonts.bold }} numberOfLines={1}>
-                    {item.title}
-                  </Text>
-                  <Text style={{ color: colors.muted, fontSize: 11 }}>{item.detail}</Text>
-                </View>
-                <View style={{ alignItems: "flex-end", gap: 4 }}>
-                  {item.amount != null ? <Text style={{ color: colors.ink, fontSize: 14, fontFamily: fonts.bold }}>{formatMoney(item.amount)}</Text> : null}
-                  {item.status ? <Pill label={item.status} tone={item.status === "approved" ? "mint" : item.status === "rejected" ? "coral" : "yellow"} /> : null}
-                </View>
-              </View>
-            ))}
-          </View>
-        )}
-      </Card>
+        <View style={{ flex: wide ? 1 : undefined, width: wide ? undefined : "100%", gap: 24 }}>
+          {!isAdmin && <Card style={{ gap: 18 }}><View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}><View style={{ width: 44, height: 44, backgroundColor: colors.mint, borderRadius: 14, alignItems: "center", justifyContent: "center" }}><Icon name="calendar-outline" size={22} color={colors.accent} /></View><Pill label={`${myStayCount} days selected`} tone="mint" /></View><SectionHeader title="Your days, your share." /><Text style={{ color: colors.muted, fontFamily: fonts.body, fontSize: 13, lineHeight: 22 }}>Electricity, WiFi, and water are shared based on the days you stay. Keep your dates updated for a fair split.</Text><Button variant="secondary" icon="calendar-outline" title="Manage stay dates" arrow onPress={() => router.push("/modal/stay-dates")} /></Card>}
+          <Card style={{ backgroundColor: colors.panelSoft, borderColor: colors.panelSoft, gap: 12 }}><Icon name="shield-checkmark-outline" size={24} color={colors.accent} /><Text style={{ color: colors.ink, fontFamily: fonts.displayMedium, fontSize: 18, letterSpacing: -0.5 }}>A little peace of mind.</Text><Text style={{ color: colors.muted, fontFamily: fonts.body, fontSize: 13, lineHeight: 22 }}>Payments stay in review until a household admin verifies them. You'll always see where things stand.</Text></Card>
+        </View>
+      </View>
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  row: { flexDirection: "row", alignItems: "center", gap: 12 },
-});

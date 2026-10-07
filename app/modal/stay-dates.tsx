@@ -3,7 +3,7 @@ import React, { useCallback, useState } from "react";
 import { Text } from "react-native";
 
 import { CalendarPicker } from "@/components/CalendarPicker";
-import { Button, Card, EmptyState, Screen, SectionHeader } from "@/components/ui";
+import { Button, Card, EmptyState, PageHeader, Screen, SectionHeader } from "@/components/ui";
 import { fetchStayDates, saveStayDates } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useHousehold } from "@/lib/household";
@@ -88,9 +88,9 @@ export default function StayDatesModal() {
 
   return (
     <Screen>
-      <SectionHeader icon="calendar-outline" title="When are you here?" subtitle={`Tap the days you will stay during ${period.label} — they set your utility shares`} />
+      <PageHeader title="When are you here?" subtitle={`Tap the days you will stay during ${period.label} — they set your utility shares`} />
 
-      <Card>
+      <Card style={{ padding: 12 }}>
         {loaded ? (
           <CalendarPicker month={month} onMonthChange={setMonth} selected={selected} onToggle={toggle} />
         ) : (

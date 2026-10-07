@@ -20,14 +20,24 @@ export interface Colors {
   onForest: string;
   success: string;
   danger: string;
+  accent: string;
+  panelSoft: string;
+  onForestMuted: string;
+  glass: string;
+  shadow: string;
+  warningSoft: string;
+  warningInk: string;
+  dangerSoft: string;
+  blueSoft: string;
+  blueInk: string;
 }
 
 /** Palette kept from the original UDH-304 web design (styles.css). */
 export const lightColors: Colors = {
-  ink: "#18211f",
-  muted: "#71807b",
-  line: "#e6ebe7",
-  paper: "#fbfcfa",
+  ink: "#202b25",
+  muted: "#5c6961",
+  line: "#e1e7e0",
+  paper: "#f5f7f3",
   panel: "#ffffff",
   forest: "#1d5346",
   forestDark: "#173d35",
@@ -38,14 +48,24 @@ export const lightColors: Colors = {
   onForest: "#e9f4ef",
   success: "#2e7d5b",
   danger: "#b04a33",
+  accent: "#1d5346",
+  panelSoft: "#eef2ec",
+  onForestMuted: "#bfd5c8",
+  glass: "rgba(255,255,255,0.88)",
+  shadow: "rgba(24,45,32,0.05)",
+  warningSoft: "#faf1dc",
+  warningInk: "#806012",
+  dangerSoft: "#fbeae3",
+  blueSoft: "#e7f0f4",
+  blueInk: "#3a6372",
 };
 
 export const darkColors: Colors = {
   ink: "#edf4ef",
-  muted: "#a7b8b0",
-  line: "#2d4940",
-  paper: "#101b18",
-  panel: "#172822",
+  muted: "#adbbb1",
+  line: "#34443a",
+  paper: "#101813",
+  panel: "#1a251e",
   forest: "#1d5346",
   forestDark: "#102b24",
   mint: "#23473b",
@@ -55,6 +75,16 @@ export const darkColors: Colors = {
   onForest: "#e9f4ef",
   success: "#8ed3a8",
   danger: "#e08a70",
+  accent: "#a1d5b8",
+  panelSoft: "#233128",
+  onForestMuted: "#bfd5c8",
+  glass: "rgba(26,37,30,0.92)",
+  shadow: "rgba(0,0,0,0.16)",
+  warningSoft: "#3b3423",
+  warningInk: "#f2cf85",
+  dangerSoft: "#422d27",
+  blueSoft: "#263a41",
+  blueInk: "#afd1dd",
 };
 
 export const fonts = {

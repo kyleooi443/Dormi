@@ -2,7 +2,7 @@ import { router } from "expo-router";
 import React, { useState } from "react";
 import { Text } from "react-native";
 
-import { Button, Card, Chips, Field, Screen, SectionHeader } from "@/components/ui";
+import { Button, Card, Chips, Field, PageHeader, Screen, SectionHeader } from "@/components/ui";
 import { createBill } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { isValidDateKey } from "@/lib/format";
@@ -84,13 +84,13 @@ export default function AddBillModal() {
 
   return (
     <Screen>
-      <SectionHeader icon="add-circle-outline" title="Add a household bill" subtitle={`${period.label} · each type can appear once per period`} />
+      <PageHeader title="Add a household bill" subtitle={`${period.label} · each type can appear once per period`} />
 
       <Card style={{ gap: 14 }}>
         <Chips
           options={BILL_TYPES.map((value) => ({
             value,
-            label: usedTypes.has(value) ? `${BILL_TYPE_LABELS[value]} ✓` : BILL_TYPE_LABELS[value],
+            label: usedTypes.has(value) ? `${BILL_TYPE_LABELS[value]} (added)` : BILL_TYPE_LABELS[value],
           }))}
           value={type}
           onChange={setType}

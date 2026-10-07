@@ -43,3 +43,6 @@ yarn-error.*
 # Vercel
 .vercel/
 screenshots/
+
+# Local UI review outputs
+/artifacts/

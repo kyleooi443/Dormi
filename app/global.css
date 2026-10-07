@@ -1,0 +1,12 @@
+html, body, #root { min-height: 100%; }
+body { margin: 0; -webkit-font-smoothing: antialiased; }
+[data-testid="page-scroll"] { scroll-padding-bottom: 128px; }
+* { box-sizing: border-box; }
+[role="button"], [role="tab"], a, button { -webkit-tap-highlight-color: transparent; }
+[role="button"], [role="tab"], button { transition: background-color 160ms ease, color 160ms ease, opacity 120ms ease, box-shadow 160ms ease; }
+:focus-visible { outline: 2px solid #679d81; outline-offset: 4px; border-radius: 8px; }
+input:focus-visible, textarea:focus-visible { outline: none; }
+::selection { background: #d9eee3; color: #173d35; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}

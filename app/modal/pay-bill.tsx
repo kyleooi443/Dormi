@@ -1,10 +1,10 @@
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
-import { Button, Card, EmptyState, Field, Icon, Pill, Screen, SectionHeader } from "@/components/ui";
+import { Button, Card, EmptyState, Field, Icon, Pill, PageHeader, Screen, SectionHeader } from "@/components/ui";
 import { submitPayment, uploadReceipt, type ReceiptFile } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { dueCountdown, formatDate, formatMoney, isValidDateKey, todayKey } from "@/lib/format";
@@ -31,11 +31,18 @@ export default function PayBillModal() {
   const isDayBased = bill ? SHARED_TYPES.includes(bill.type) && totalStayDays > 0 : false;
 
   const [amount, setAmount] = useState(() => computedShare.toFixed(2));
+  const [amountEdited, setAmountEdited] = useState(false);
   const [paidOn, setPaidOn] = useState(todayKey());
   const [note, setNote] = useState("");
   const [receipt, setReceipt] = useState<ReceiptFile | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Stay days resolve asynchronously. Keep the default aligned with the
+  // displayed share, while preserving any amount the renter types themselves.
+  useEffect(() => {
+    if (!amountEdited) setAmount(computedShare.toFixed(2));
+  }, [computedShare, amountEdited]);
 
   if (!bill || !profile) {
     return (
@@ -92,7 +99,7 @@ export default function PayBillModal() {
 
   return (
     <Screen>
-      <SectionHeader icon="cash-outline" title="Pay my share" subtitle={bill.title} />
+      <PageHeader title="Pay your share" subtitle={bill.title} />
 
       {/* transparent breakdown — builds trust in the number */}
       <Card style={{ gap: 10 }}>
@@ -124,12 +131,12 @@ export default function PayBillModal() {
             <Text style={{ color: colors.ink, fontFamily: fonts.bold, fontSize: 14 }}>Your share</Text>
             <Text style={{ color: colors.muted, fontSize: 11 }}>{shareBasis(bill, shareCtx)}</Text>
           </View>
-          <Text style={{ color: colors.forest, fontFamily: fonts.display, fontSize: 22 }}>{formatMoney(computedShare)}</Text>
+          <Text style={{ color: colors.accent, fontFamily: fonts.display, fontSize: 22 }}>{formatMoney(computedShare)}</Text>
         </View>
         {SHARED_TYPES.includes(bill.type) && totalStayDays === 0 ? (
           <View style={[styles.hintRow, { backgroundColor: colors.mint }]}>
-            <Icon name="information-circle-outline" size={15} color={colors.forest} />
-            <Text style={{ color: colors.forest, fontSize: 11, flex: 1, lineHeight: 16 }}>
+            <Icon name="information-circle-outline" size={15} color={colors.accent} />
+            <Text style={{ color: colors.accent, fontSize: 11, flex: 1, lineHeight: 16 }}>
               No stay days recorded yet, so this splits equally. Pick your days in Stay dates to prorate future bills.
             </Text>
           </View>
@@ -137,7 +144,7 @@ export default function PayBillModal() {
       </Card>
 
       <Card style={{ gap: 14 }}>
-        <Field label="Amount paid (₱)" value={amount} onChangeText={setAmount} keyboardType="decimal-pad" hint={isDayBased ? "Prefilled from your stay days — adjust if you paid a different amount." : undefined} />
+        <Field label="Amount paid (₱)" value={amount} onChangeText={(value) => { setAmountEdited(true); setAmount(value); }} keyboardType="decimal-pad" hint={isDayBased ? "Prefilled from your stay days — adjust if you paid a different amount." : undefined} />
         <Field label="Date paid" value={paidOn} onChangeText={setPaidOn} autoCapitalize="none" hint="Format: YYYY-MM-DD" />
         <Field label="Note (optional)" value={note} onChangeText={setNote} placeholder="GCash reference, partial payment…" />
 

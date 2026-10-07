@@ -10,11 +10,14 @@ import { AuthProvider } from "@/lib/auth";
 import { HouseholdProvider } from "@/lib/household";
 import { ThemeProvider, useTheme } from "@/lib/theme";
 import { ToastProvider } from "@/lib/toast";
+import { useReducedMotion } from "@/components/MotionView";
+import "./global.css";
 
 void SplashScreen.preventAutoHideAsync();
 
 function RootStack() {
   const { colors, isDark } = useTheme();
+  const reducedMotion = useReducedMotion();
   return (
     <>
       <StatusBar style={isDark ? "light" : "dark"} />
@@ -22,6 +25,7 @@ function RootStack() {
         screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: colors.paper },
+          animation: reducedMotion ? "none" : "default",
         }}
       >
         <Stack.Screen name="login" />

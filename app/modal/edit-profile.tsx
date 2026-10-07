@@ -2,7 +2,7 @@ import { router } from "expo-router";
 import React, { useState } from "react";
 import { Text } from "react-native";
 
-import { Avatar, Button, Card, Field, Screen, SectionHeader } from "@/components/ui";
+import { Avatar, Button, Card, Field, PageHeader, Screen, SectionHeader } from "@/components/ui";
 import { updateFullName } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/lib/toast";
@@ -38,7 +38,7 @@ export default function EditProfileModal() {
 
   return (
     <Screen>
-      <SectionHeader icon="person-circle-outline" title="Update your name" subtitle={`Your household username stays @${profile?.username ?? ""}`} />
+      <PageHeader title="Make yourself at home." subtitle={`Your household username stays @${profile?.username ?? ""}`} />
       <Card style={{ gap: 14 }}>
         <Avatar name={fullName || "?"} size={56} />
         <Field label="Full name" value={fullName} onChangeText={setFullName} autoComplete="name" maxLength={120} />

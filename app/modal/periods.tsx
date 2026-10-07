@@ -2,7 +2,7 @@ import { router } from "expo-router";
 import React, { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { Button, Card, Field, Icon, Screen, SectionHeader } from "@/components/ui";
+import { Button, Card, Field, Icon, PageHeader, Screen, SectionHeader } from "@/components/ui";
 import { createPeriod } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { formatDate, formatMonthYear, isValidDateKey } from "@/lib/format";
@@ -61,7 +61,7 @@ export default function PeriodsModal() {
 
   return (
     <Screen>
-      <SectionHeader icon="calendar-outline" title="Billing periods" subtitle="Switch the period you are viewing" />
+      <PageHeader title="Billing periods" subtitle="Switch the period you are viewing" />
 
       <View style={{ gap: 10 }}>
         {periods.map((item) => {
@@ -80,7 +80,7 @@ export default function PeriodsModal() {
               <View style={{ flex: 1 }}>
                 <Text style={{ color: colors.ink, fontFamily: fonts.bold, fontSize: 15 }}>{item.label}</Text>
                 <Text style={{ color: colors.muted, fontSize: 12 }}>
-                  {formatDate(item.starts_on)} → {formatDate(item.ends_on)} · due {formatDate(item.due_on)}
+                  {formatDate(item.starts_on)} to {formatDate(item.ends_on)} · due {formatDate(item.due_on)}
                 </Text>
               </View>
               <Icon name={active ? "radio-button-on" : "radio-button-off"} size={20} color={active ? colors.forest : colors.muted} />

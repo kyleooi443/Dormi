@@ -3,9 +3,9 @@ import { File, Paths } from "expo-file-system";
 import { useFocusEffect } from "expo-router";
 import * as Sharing from "expo-sharing";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Linking, Platform, Switch, StyleSheet, Text, View } from "react-native";
+import { Linking, Platform, Switch, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 
-import { Avatar, Button, Card, EmptyState, Pill, ProgressBar, Screen, SectionHeader } from "@/components/ui";
+import { Avatar, Button, Card, EmptyState, PageHeader, Pill, ProgressBar, Screen, SectionHeader, StatCard } from "@/components/ui";
 import { fetchPayments, fetchStayDates, getReceiptUrl, reviewPayment, setMemberActive } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { formatDate, formatMoney } from "@/lib/format";
@@ -17,6 +17,8 @@ import { BILL_TYPE_LABELS, type Payment } from "@/lib/types";
 
 export default function AdminScreen() {
   const { colors } = useTheme();
+  const { width } = useWindowDimensions();
+  const wide = width >= 900;
   const { profile } = useAuth();
   const toast = useToast();
   const { period, bills, members, renterCount, refresh, loading } = useHousehold();
@@ -52,14 +54,6 @@ export default function AdminScreen() {
     void load();
   }, [load]);
 
-  if (profile?.role !== "admin") {
-    return (
-      <Screen>
-        <EmptyState icon="lock-closed-outline" title="Admin access required" hint="This console manages members, bills, and payment reviews for UDH-304." />
-      </Screen>
-    );
-  }
-
   const pendingReview = payments.filter((payment) => payment.status === "submitted");
   const memberName = (id: string) => members.find((member) => member.id === id)?.full_name ?? "Unknown";
 
@@ -70,6 +64,14 @@ export default function AdminScreen() {
     () => buildReportLines(periodBills, activeRenters, payments, stayCounts, totalStayDays, renterCount),
     [periodBills, activeRenters, payments, stayCounts, totalStayDays, renterCount]
   );
+
+  if (profile?.role !== "admin") {
+    return (
+      <Screen>
+        <EmptyState icon="lock-closed-outline" title="Admin access required" hint="This console manages members, bills, and payment reviews for UDH-304." />
+      </Screen>
+    );
+  }
 
   async function handleCopySummary() {
     if (!period) return;
@@ -145,7 +147,14 @@ export default function AdminScreen() {
 
   return (
     <Screen clearTabBar refreshing={loading} onRefresh={() => void refresh()}>
-      <SectionHeader icon="shield-checkmark-outline" title="Admin console" subtitle="Manage up to 3 admins and 8 renters for UDH-304" action={<Pill label="ADMIN" tone="mint" />} />
+      <PageHeader title="Your home, in good hands." subtitle="A clear workspace for keeping everyone in harmony." action={<Pill label="Household admin" tone="mint" />} />
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 16 }}>
+        <StatCard label="Awaiting review" value={`${pendingReview.length}`} icon="documents-outline" meta="Payments ready for a look" />
+        <StatCard label="Verified payments" value={formatMoney(payments.filter(p => p.status === "approved").reduce((sum, p) => sum + Number(p.amount), 0))} icon="checkmark-circle-outline" meta={period?.label ?? "No period selected"} />
+        <StatCard label="Your household" value={`${members.filter(m => m.active).length}`} icon="people-outline" meta={`${renterCount} renters sharing the essentials`} />
+      </View>
+      <View style={{ flexDirection: wide ? "row" : "column", gap: 24, alignItems: "flex-start" }}>
+      <View style={{ flex: wide ? 1.4 : undefined, width: wide ? undefined : "100%", gap: 24, minWidth: 0 }}>
 
       {/* payment review */}
       <Card>
@@ -190,7 +199,7 @@ export default function AdminScreen() {
             <EmptyState icon="stats-chart-outline" title="No bills this period" hint="Add a bill from Overview." />
           ) : (
             periodBills.map((bill) => {
-              const received = payments.filter((payment) => payment.bill_id === bill.id && payment.status !== "rejected");
+              const received = payments.filter((payment) => payment.bill_id === bill.id && payment.status === "approved");
               const collected = received.reduce((sum, payment) => sum + Number(payment.amount), 0);
               return (
                 <View key={bill.id} style={{ gap: 6 }}>
@@ -213,6 +222,8 @@ export default function AdminScreen() {
         </View>
       </Card>
 
+      </View>
+      <View style={{ flex: wide ? 1 : undefined, width: wide ? undefined : "100%", gap: 24, minWidth: 0 }}>
       {/* period report */}
       <Card>
         <SectionHeader icon="document-text-outline" title="Period report" subtitle={period ? `${period.label} · every renter × every bill` : "No period selected"} />
@@ -227,7 +238,7 @@ export default function AdminScreen() {
 
       {/* members */}
       <Card>
-        <SectionHeader icon="people-outline" title="Connected members" subtitle={`${members.filter((member) => member.active).length} active · ${renterCount} renters`} />
+        <SectionHeader icon="people-outline" title="The people who make it home" subtitle={`${members.filter((member) => member.active).length} active · ${renterCount} renters`} />
         <View style={{ gap: 12, marginTop: 12 }}>
           {members.map((member, index) => (
             <View key={member.id} style={styles.memberRow}>
@@ -244,12 +255,15 @@ export default function AdminScreen() {
                 disabled={member.id === profile?.id || busyId === member.id}
                 onValueChange={(value) => void handleToggleMember(member.id, value)}
                 trackColor={{ true: colors.forest, false: colors.line }}
-                thumbColor="#ffffff"
+                thumbColor={colors.onForest}
+                accessibilityLabel={`Active membership for ${member.full_name}`}
               />
             </View>
           ))}
         </View>
       </Card>
+      </View>
+      </View>
     </Screen>
   );
 }

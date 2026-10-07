@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { toDateKey } from "@/lib/format";
 import { fonts, useTheme } from "@/lib/theme";
+import { IconButton } from "./ui";
 
 const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 const MONTHS = [
@@ -44,15 +45,11 @@ export function CalendarPicker({
   return (
     <View style={{ gap: 12 }}>
       <View style={styles.toolbar}>
-        <Pressable accessibilityRole="button" accessibilityLabel="Previous month" onPress={() => move(-1)} style={[styles.navButton, { borderColor: colors.line }]}>
-          <Text style={{ color: colors.ink, fontSize: 16 }}>←</Text>
-        </Pressable>
+        <IconButton label="Previous month" icon="chevron-back" onPress={() => move(-1)} />
         <Text style={[styles.monthLabel, { color: colors.ink }]}>
           {MONTHS[monthIndex]} {year}
         </Text>
-        <Pressable accessibilityRole="button" accessibilityLabel="Next month" onPress={() => move(1)} style={[styles.navButton, { borderColor: colors.line }]}>
-          <Text style={{ color: colors.ink, fontSize: 16 }}>→</Text>
-        </Pressable>
+        <IconButton label="Next month" icon="chevron-forward" onPress={() => move(1)} />
       </View>
 
       <View style={styles.weekRow}>
@@ -73,9 +70,12 @@ export function CalendarPicker({
               key={key}
               accessibilityRole="button"
               accessibilityState={{ selected: isSelected }}
+              aria-pressed={isSelected}
+              accessibilityLabel={`${MONTHS[monthIndex]} ${Number(key.slice(-2))}, ${year}`}
               onPress={() => onToggle(key)}
-              style={[
+              style={({ pressed }) => [
                 styles.cell,
+                { opacity: pressed ? 0.65 : 1 },
                 styles.dayCell,
                 { borderColor: isToday ? colors.coral : "transparent" },
                 isSelected && { backgroundColor: colors.forest },
@@ -97,8 +97,8 @@ const styles = StyleSheet.create({
   navButton: { width: 38, height: 38, borderRadius: 11, borderWidth: 1, alignItems: "center", justifyContent: "center" },
   monthLabel: { fontSize: 16, fontFamily: fonts.displayMedium },
   weekRow: { flexDirection: "row" },
-  weekday: { flex: 1, textAlign: "center", fontSize: 11, fontFamily: fonts.bold, textTransform: "uppercase", letterSpacing: 0.5 },
+  weekday: { flex: 1, textAlign: "center", fontSize: 11, fontFamily: fonts.bold, letterSpacing: 0.1 },
   grid: { flexDirection: "row", flexWrap: "wrap" },
-  cell: { width: `${100 / 7}%`, aspectRatio: 1, alignItems: "center", justifyContent: "center" },
+  cell: { width: `${100 / 7}%`, aspectRatio: 1, minHeight: 44, alignItems: "center", justifyContent: "center" },
   dayCell: { borderRadius: 999, borderWidth: 1.5 },
 });

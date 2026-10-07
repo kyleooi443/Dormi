@@ -1,67 +1,39 @@
-import React from "react";
-import { StyleSheet, Text, View } from "react-native";
-
+import React, { useEffect, useRef } from "react";
+import { Animated, Platform, Text, View } from "react-native";
 import { formatMoneyCompact } from "@/lib/format";
 import { fonts, useTheme } from "@/lib/theme";
+import { useReducedMotion } from "./MotionView";
 
-export interface BarDatum {
-  label: string;
-  total: number;
-  share: number;
-}
+export interface BarDatum { label: string; total: number; share: number; }
 
-/** Paired bars: total bill (blue) vs. your share (forest). Styled like the original web dashboard. */
-export function BarChart({ data }: { data: BarDatum[] }) {
+export function BarChart({ data, showShare = false }: { data: BarDatum[]; showShare?: boolean }) {
   const { colors } = useTheme();
-  const max = Math.max(...data.map((item) => item.total), 1);
-
-  return (
-    <View>
-      <View style={styles.row}>
-        {data.map((item) => (
-          <View key={item.label} style={styles.group}>
-            <View style={styles.bars}>
-              <View style={styles.barCol}>
-                <Text style={[styles.barValue, { color: colors.muted }]} numberOfLines={1}>
-                  {formatMoneyCompact(item.total)}
-                </Text>
-                <View style={[styles.bar, { backgroundColor: colors.blue, height: `${Math.max(4, (item.total / max) * 100)}%` }]} />
-              </View>
-              <View style={styles.barCol}>
-                <Text style={[styles.barValue, { color: colors.muted }]} numberOfLines={1}>
-                  {formatMoneyCompact(item.share)}
-                </Text>
-                <View style={[styles.bar, { backgroundColor: colors.forest, height: `${Math.max(4, (item.share / max) * 100)}%` }]} />
-              </View>
-            </View>
-            <Text style={[styles.label, { color: colors.muted }]}>{item.label}</Text>
-          </View>
-        ))}
-      </View>
-      <View style={styles.legend}>
-        <View style={styles.legendItem}>
-          <View style={[styles.dot, { backgroundColor: colors.blue }]} />
-          <Text style={[styles.legendText, { color: colors.muted }]}>Total bill</Text>
+  const reduced = useReducedMotion();
+  const progress = useRef(new Animated.Value(1)).current;
+  const max = Math.max(...data.map(item => item.total), 1);
+  const dataKey = data.map(item => `${item.label}:${item.total}:${item.share}`).join("|");
+  useEffect(() => {
+    if (reduced) { progress.setValue(1); return; }
+    progress.setValue(0.1);
+    const animation = Animated.spring(progress, { toValue: 1, damping: 22, stiffness: 140, mass: 1, useNativeDriver: Platform.OS !== "web" });
+    animation.start();
+    return () => animation.stop();
+  }, [dataKey, progress, reduced]);
+  return <View style={{ marginTop: 28 }}>
+    <View style={{ height: 190, flexDirection: "row", gap: 24, paddingHorizontal: 20 }}>
+      <View pointerEvents="none" style={{ position: "absolute", top: 18, bottom: 25, left: 0, right: 0, justifyContent: "space-between" }}>{[0, 1, 2, 3].map(n => <View key={n} style={{ height: 1, backgroundColor: colors.line }} />)}</View>
+      {data.map(item => <View key={item.label} accessible accessibilityLabel={`${item.label}: household total ${formatMoneyCompact(item.total)}${showShare ? `, equal split reference ${formatMoneyCompact(item.share)}` : ""}`} style={{ flex: 1, alignItems: "center", justifyContent: "flex-end", gap: 10 }}>
+        <Text style={{ color: colors.ink, fontFamily: fonts.medium, fontSize: 12 }}>{formatMoneyCompact(item.total)}</Text>
+        <View style={{ flexDirection: "row", alignItems: "flex-end", justifyContent: "center", gap: 8, height: 140, width: "100%" }}>
+          <Animated.View style={{ height: Math.max(4, item.total / max * 140), width: showShare ? "35%" : "55%", maxWidth: 64, borderTopLeftRadius: 9, borderTopRightRadius: 9, backgroundColor: colors.accent, transformOrigin: "bottom", transform: [{ scaleY: progress }] }} />
+          {showShare && <Animated.View style={{ height: Math.max(4, item.share / max * 140), width: "35%", maxWidth: 44, borderTopLeftRadius: 9, borderTopRightRadius: 9, backgroundColor: colors.blue, transformOrigin: "bottom", transform: [{ scaleY: progress }] }} />}
         </View>
-        <View style={styles.legendItem}>
-          <View style={[styles.dot, { backgroundColor: colors.forest }]} />
-          <Text style={[styles.legendText, { color: colors.muted }]}>Your share</Text>
-        </View>
-      </View>
+        <Text style={{ color: colors.muted, fontFamily: fonts.body, fontSize: 12 }}>{item.label}</Text>
+      </View>)}
     </View>
-  );
+    <View style={{ flexDirection: "row", gap: 16, alignItems: "center", justifyContent: "center", marginTop: 20 }}>
+      <View style={{ width: 8, height: 8, borderRadius: 3, backgroundColor: colors.accent }} /><Text style={{ color: colors.muted, fontFamily: fonts.body, fontSize: 12 }}>Household total</Text>
+      {showShare && <><View style={{ width: 8, height: 8, borderRadius: 3, backgroundColor: colors.blue }} /><Text style={{ color: colors.muted, fontFamily: fonts.body, fontSize: 12 }}>Equal split reference</Text></>}
+    </View>
+  </View>;
 }
-
-const styles = StyleSheet.create({
-  row: { flexDirection: "row", alignItems: "flex-end", gap: 18, height: 150, marginTop: 8 },
-  group: { flex: 1, alignItems: "center", gap: 8 },
-  bars: { flex: 1, flexDirection: "row", alignItems: "flex-end", gap: 6 },
-  barCol: { flex: 1, maxWidth: 30, alignItems: "center", justifyContent: "flex-end", gap: 4, alignSelf: "stretch" },
-  bar: { width: "100%", borderRadius: 8, minHeight: 4 },
-  barValue: { fontSize: 9, fontFamily: fonts.bold },
-  label: { fontSize: 12, fontFamily: fonts.medium },
-  legend: { flexDirection: "row", gap: 18, justifyContent: "center", marginTop: 14 },
-  legendItem: { flexDirection: "row", alignItems: "center", gap: 6 },
-  dot: { width: 9, height: 9, borderRadius: 5 },
-  legendText: { fontSize: 12, fontFamily: fonts.medium },
-});
